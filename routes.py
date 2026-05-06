@@ -1,0 +1,305 @@
+from flask import render_template, request, redirect, url_for, jsonify
+from sqlalchemy.exc import IntegrityError
+
+from app import app
+from models import db, Activity
+from datetime import date, datetime, timedelta
+
+import calendar
+
+
+def serialize_activity(activity):
+    return {
+        'id': activity.id,
+        'name': activity.name,
+        'duration_seconds': activity.duration_seconds,
+        'total_duration_seconds': activity.total_duration_seconds,
+        'is_running': activity.is_running,
+        'day': activity.day.isoformat(),
+    }
+
+
+def add_months(base_date, months):
+    month_index = (base_date.month - 1) + months
+    year = base_date.year + (month_index // 12)
+    month = (month_index % 12) + 1
+    last_day = calendar.monthrange(year, month)[1]
+    day = min(base_date.day, last_day)
+    return base_date.replace(year=year, month=month, day=day)
+
+
+def format_date_span(start_date, end_date):
+    if start_date.year == end_date.year:
+        if start_date.month == end_date.month:
+            return f'{start_date.strftime("%b")} {start_date.day}–{end_date.day}, {start_date.year}'
+        return f'{start_date.strftime("%b")} {start_date.day} – {end_date.strftime("%b")} {end_date.day}, {start_date.year}'
+    return f'{start_date.strftime("%b")} {start_date.day}, {start_date.year} – {end_date.strftime("%b")} {end_date.day}, {end_date.year}'
+
+
+def get_date_range(view_type, offset):
+    today = date.today()
+    if view_type == 'month':
+        target_date = add_months(today.replace(day=1), offset)
+        start_date = target_date.replace(day=1)
+        last_day = calendar.monthrange(start_date.year, start_date.month)[1]
+        end_date = start_date.replace(day=last_day)
+    else:  # Default to week
+        start_date = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
+        end_date = start_date + timedelta(days=6)
+    return start_date, end_date
+
+
+@app.route('/')
+def track():
+    current_date = date.today()
+
+    # 1. Fetch activities from DB
+    activities = Activity.query.filter(
+        Activity.day == current_date
+    ).all()
+
+    # 2. Calculate total time spent on activities for the day
+    total_seconds = sum(activity.total_duration_seconds for activity in activities)
+
+    return render_template('track.html',
+                           activities=activities,
+                           current_date=current_date,
+                           total_seconds=total_seconds)
+
+
+@app.route('/add_and_run', methods=['POST'])
+def add_and_run():
+    name = request.form.get('name')
+    day_str = request.form.get('day')
+    day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
+    time = request.form.get('time')
+    duration_seconds = int(time) if time else 0
+
+    # Create the activity already in 'running' state
+    new_activity = Activity(
+        name=name,
+        day=day_obj,
+        duration_seconds=duration_seconds,
+        is_running=True,
+        last_start_time=datetime.now()
+    )
+
+    db.session.add(new_activity)
+    db.session.commit()
+    return redirect(url_for('track'))
+
+
+@app.route('/delete/<int:id>', methods=['POST'])
+def delete(id):
+    activity = Activity.query.get_or_404(id)
+    db.session.delete(activity)
+    db.session.commit()
+
+    # db.session.commit()
+    return redirect(url_for('track'))
+
+@app.route('/update/<int:id>', methods=['POST'])
+def update(id):
+    print(id)
+    name = request.form.get('name')
+    day_str = request.form.get('day')
+    day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
+    time = request.form.get('time')
+    duration_seconds = int(time) if time else 0
+
+    activity = Activity.query.get_or_404(id)
+    activity.update(name, day_obj, duration_seconds)
+
+    return redirect(url_for('track'))
+
+
+@app.route('/activity/<int:id>', methods=['PATCH'])
+def update_activity_field(id):
+    activity = Activity.query.get_or_404(id)
+    payload = request.get_json(silent=True) or {}
+    field = payload.get('field')
+    value = payload.get('value')
+
+    if field == 'name':
+        cleaned_name = (value or '').strip()
+        if not cleaned_name:
+            return jsonify({'ok': False, 'error': 'Name cannot be empty.'}), 400
+        if len(cleaned_name) > 100:
+            return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
+        activity.name = cleaned_name
+    elif field == 'duration_seconds':
+        try:
+            duration_seconds = int(value)
+        except (TypeError, ValueError):
+            return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
+
+        if duration_seconds < 0:
+            return jsonify({'ok': False, 'error': 'Duration must be zero or positive.'}), 400
+        activity.duration_seconds = duration_seconds
+    else:
+        return jsonify({'ok': False, 'error': 'Unsupported field.'}), 400
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': 'Could not save activity.'}), 500
+
+    return jsonify({'ok': True, 'activity': serialize_activity(activity)})
+
+
+@app.route('/activity', methods=['POST'])
+def create_activity():
+    payload = request.get_json(silent=True) or {}
+    day_str = payload.get('day')
+
+    if not day_str:
+        return jsonify({'ok': False, 'error': 'Day is required.'}), 400
+
+    try:
+        day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return jsonify({'ok': False, 'error': 'Invalid day value.'}), 400
+
+    cleaned_name = (payload.get('name') or '').strip()
+    if len(cleaned_name) > 100:
+        return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
+
+    duration_value = payload.get('duration_seconds')
+    if duration_value in (None, ''):
+        duration_seconds = 0
+    else:
+        try:
+            duration_seconds = int(duration_value)
+        except (TypeError, ValueError):
+            return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
+
+    if duration_seconds < 0:
+        return jsonify({'ok': False, 'error': 'Duration must be zero or positive.'}), 400
+
+    if not cleaned_name and duration_value in (None, ''):
+        return jsonify({'ok': False, 'error': 'Enter a name or a duration.'}), 400
+
+    activity = Activity(
+        name=cleaned_name or '',
+        day=day_obj,
+        duration_seconds=duration_seconds,
+        is_running=False,
+        last_start_time=None,
+    )
+
+    try:
+        db.session.add(activity)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': 'Could not create activity.'}), 500
+
+    return jsonify({'ok': True, 'activity': serialize_activity(activity)}), 201
+
+
+@app.route('/start/<int:id>')
+def start_timer(id):
+    print(id)
+    activity = Activity.query.get_or_404(id)
+    if not activity.is_running:
+        activity.is_running = True
+        activity.last_start_time = datetime.now()
+        db.session.commit()
+    else:
+        print('Activity is running')
+
+    return redirect(request.referrer or url_for('track'))
+
+
+@app.route('/stop/<int:id>')
+def stop_timer(id):
+    print(id)
+    activity = Activity.query.get_or_404(id)
+    if activity.is_running and activity.last_start_time:
+        # Calculate difference between NOW and the saved START time
+        now = datetime.now()
+        elapsed = now - activity.last_start_time
+
+        # Add the elapsed seconds to the existing total
+        activity.duration_seconds += int(elapsed.total_seconds())
+
+        # Reset state
+        activity.is_running = False
+        activity.last_start_time = None
+        db.session.commit()
+    else:
+        print('Activity not running')
+    return redirect(request.referrer or url_for('track'))
+
+
+
+
+@app.route('/manage')
+def dashboard():
+    view = request.args.get('view', 'week')
+    offset = int(request.args.get('offset', 0))
+    start_date, end_date = get_date_range(view, offset)
+    heading_label = (
+        start_date.strftime('%B %Y')
+        if view == 'month'
+        else format_date_span(start_date, end_date)
+    )
+
+    # 1. Fetch activities from DB
+    activities_db = Activity.query.filter(
+        Activity.day >= start_date,
+        Activity.day <= end_date
+    ).all()
+
+    # 2. Organize activities by date
+    # Result structure: { date(2023,10,27): [Activity1, Activity2], ... }
+    activities_by_day = {}
+    total_seconds_by_day = {}
+    for act in activities_db:
+        if act.day not in activities_by_day:
+            activities_by_day[act.day] = []
+            total_seconds_by_day[act.day] = 0
+        activities_by_day[act.day].append(act)
+        total_seconds_by_day[act.day] += act.total_duration_seconds
+
+    # 3. Create a sorted list of all dates in the range
+    all_days = []
+    curr = start_date
+    while curr <= end_date:
+        all_days.append(curr)
+        # Initialize zero total for days with no activities
+        if curr not in total_seconds_by_day:
+            total_seconds_by_day[curr] = 0
+        curr += timedelta(days=1)
+
+
+    return render_template('dashboard.html',
+                           all_days=all_days,
+                           activities_by_day=activities_by_day,
+                           total_seconds_by_day=total_seconds_by_day,
+                           view=view,
+                           offset=offset,
+                           start_date=start_date,
+                           end_date=end_date,
+                           heading_label=heading_label,
+                           date=date)  # Pass the date class for comparisons
+
+
+
+@app.route('/add_activity', methods=['POST'])
+def add_activity():
+    name = request.form.get('name')
+    activity_day = request.form.get('day')  # String 'YYYY-MM-DD'
+    note = request.form.get('note')
+
+    # Convert string to date object
+    day_obj = datetime.strptime(activity_day, '%Y-%m-%d').date()
+
+    new_activity = Activity(name=name, day=day_obj, note=note)
+    db.session.add(new_activity)
+    db.session.commit()
+
+    return redirect(request.referrer or url_for('dashboard'))
+
+

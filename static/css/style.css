@@ -1,0 +1,365 @@
+/* static/css/style.css */
+:root {
+    --primary-color: #2563eb;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --success: #22c55e;
+    --danger: #ef4444;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.5;
+    margin: 0;
+    padding: 2rem;
+}
+
+/* Container & Navigation */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+nav {
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.top-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+
+nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+nav a:hover {
+    background: var(--border-color);
+    color: var(--primary-color);
+}
+
+.top-menu a {
+    margin-right: 0;
+}
+
+.top-menu a.is-active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Headers & Controls */
+h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.controls a {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.view-switch {
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+}
+
+.view-switch a {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: white;
+}
+
+.view-switch a.is-active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Day Groupings */
+.day-group {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 20px;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: white;
+}
+
+.day-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0;
+    background: transparent;
+    border-bottom: none;
+}
+
+.day-header h2,
+.day-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.day-header h2 {
+    font-size: 1.5rem;
+    color: var(--text-main);
+}
+
+.activities-with-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.total-time {
+    font-family: monospace;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    white-space: nowrap;
+}
+
+.total-time-container {
+    display: flex;
+    align-items: center;
+    padding-top: 0.5rem;
+}
+
+/* Inline Form */
+.add-form-container {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+form input {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-right: 0.5rem;
+}
+
+.activities-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    background-color: whitesmoke;
+}
+
+.activity-row-create {
+    background-color: #f8fafc;
+    border: 1px dashed var(--border-color);
+    padding: 0.45rem 0.35rem;
+}
+
+.inline-edit {
+    cursor: text;
+    border-radius: 4px;
+    padding: 0 4px;
+}
+
+.inline-edit[data-field="name"] {
+    display: inline-block;
+    min-width: 140px;
+}
+
+.inline-edit.is-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.activity-row-create .inline-edit.is-empty {
+    color: #94a3b8;
+}
+
+.inline-edit:hover {
+    background: #e2e8f0;
+}
+
+.inline-edit.is-saving {
+    opacity: 0.6;
+}
+
+.inline-edit.has-edit-error {
+    outline: 1px solid var(--danger);
+    background: #fee2e2;
+}
+
+.inline-edit-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+}
+
+.activity-row:last-child { border-bottom: none; }
+
+.activity-info strong { display: block; font-size: 1.05rem; }
+.activity-info small { color: var(--text-muted); }
+
+.duration {
+    font-family: monospace;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0 1rem;
+}
+
+.activity-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.activity-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.inline-form {
+    margin: 0;
+}
+
+/* Buttons */
+.btn-plus {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.btn-action {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.btn-run { background: #dcfce7; color: var(--success); }
+.btn-stop { background: #fee2e2; color: var(--danger); }
+.btn-delete {
+    background: #f1f5f9;
+    color: var(--danger);
+    border: none;
+    cursor: pointer;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal-box {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.modal-message {
+    margin: 0 0 1.25rem 0;
+    font-size: 1rem;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-modal {
+    padding: 0.45rem 1.1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+}
+
+.btn-modal-cancel {
+    background: white;
+    color: var(--text-muted);
+}
+
+.btn-modal-cancel:hover {
+    background: var(--bg-color);
+}
+
+.btn-modal-ok {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-modal-ok:hover {
+    background: #1d4ed8;
+}
+

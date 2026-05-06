@@ -1,0 +1,18 @@
+<div class="activity-row activity-row-create"
+     data-create-row="true"
+     data-day="{{ create_day }}"
+     data-allow-start="{{ 'true' if allow_start|default(true) else 'false' }}"
+     data-show-delete="{{ 'true' if show_delete|default(true) else 'false' }}">
+    <span class="inline-edit is-empty"
+          data-field="name"
+          data-value=""
+          data-placeholder="+ add new activity">+ add new activity</span>
+    <div class="activity-actions">
+        <span class="duration inline-edit is-empty"
+              data-field="duration_seconds"
+              data-value=""
+              data-placeholder="+ add time">+ add time</span>
+        <div class="activity-buttons"></div>
+    </div>
+</div>
+

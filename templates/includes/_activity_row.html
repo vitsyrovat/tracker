@@ -1,0 +1,42 @@
+<div class="activity-row">
+    <span class="inline-edit {% if not activity.name %}is-empty{% endif %}"
+          data-activity-id="{{ activity.id }}"
+          data-field="name"
+          data-value="{{ activity.name or '' }}">{{ activity.name or 'Click to add name' }}</span>
+    <div class="activity-actions">
+        <span class="duration live-timer inline-edit"
+              data-activity-id="{{ activity.id }}"
+              data-field="duration_seconds"
+              data-value="{{ activity.total_duration_seconds }}"
+              data-seconds="{{ activity.total_duration_seconds }}"
+              data-running="{{ 'true' if activity.is_running else 'false' }}">
+            {{ activity.total_duration_seconds | format_seconds }}
+        </span>
+        <div class="activity-buttons">
+            {% if activity.is_running %}
+                <a href="{{ url_for('stop_timer', id=activity.id) }}" class="btn-action btn-stop btn-icon" aria-label="Stop timer" title="Stop timer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
+                    </svg>
+                </a>
+            {% elif allow_start|default(true) %}
+                <a href="{{ url_for('start_timer', id=activity.id) }}" class="btn-action btn-run btn-icon" aria-label="Start timer" title="Start timer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
+                    </svg>
+                </a>
+            {% endif %}
+
+            {% if show_delete|default(true) %}
+                <form method="post" action="{{ url_for('delete', id=activity.id) }}" class="inline-form">
+                    <button type="submit" class="btn-action btn-delete btn-icon" aria-label="Delete activity" title="Delete activity">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"></path>
+                        </svg>
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+

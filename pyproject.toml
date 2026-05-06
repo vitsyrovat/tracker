@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-tracker"
+version = "0.1.0"
+description = "Simple personal time tracker with Flask and SQLite"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.1",
+    "Flask-SQLAlchemy>=3.1",
+]
+
+[project.scripts]
+track = "tracker_cli:main"
+
+[tool.setuptools]
+py-modules = ["app", "routes", "models", "tracker_cli"]

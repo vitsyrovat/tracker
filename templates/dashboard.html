@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>{{ heading_label }}</h2>
+
+<!-- Navigation Controls -->
+<div class="controls">
+    <a href="{{ url_for('dashboard', view=view, offset=offset-1) }}">← Previous</a>
+    <a href="{{ url_for('dashboard', view=view, offset=0) }}">Today</a>
+    <a href="{{ url_for('dashboard', view=view, offset=offset+1) }}">Next →</a>
+</div>
+
+<div class="controls view-switch">
+    <a href="{{ url_for('dashboard', view='week', offset=0) }}" class="{% if view == 'week' %}is-active{% endif %}">Week</a>
+    <a href="{{ url_for('dashboard', view='month', offset=0) }}" class="{% if view == 'month' %}is-active{% endif %}">Month</a>
+</div>
+
+{% for day in all_days %}
+<div class="day-group">
+    <!-- DATE HEADER -->
+    <div class="day-header">
+        <h3>{{ day.strftime('%a, %b %d') }}</h3>
+    </div>
+
+    <!-- ACTIVITIES & TOTAL TIME -->
+    <div class="activities-with-total">
+        <div class="activities-column">
+            {% set create_day = day %}
+            {% set day_allow_start = (day == date.today()) %}
+            {% if activities_by_day[day] %}
+                {% for activity in activities_by_day[day] %}
+                    {% set allow_start = day_allow_start %}
+                    {% set show_delete = false %}
+                    {% include 'includes/_activity_row.html' %}
+                {% endfor %}
+            {% endif %}
+
+            {% set allow_start = day_allow_start %}
+            {% set show_delete = false %}
+            {% include 'includes/_activity_create_row.html' %}
+
+            <template class="new-activity-row-template">
+                {% include 'includes/_activity_create_row.html' %}
+            </template>
+        </div>
+        <div class="total-time-container">
+            <span class="total-time">{{ total_seconds_by_day[day] | format_seconds }}</span>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
