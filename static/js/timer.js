@@ -167,13 +167,15 @@ function getActionButtonsMarkup(activityId, isRunning, options = {}) {
         ` : '';
 
     const deleteButton = showDelete ? `
-        <form method="post" action="/delete/${activityId}" class="inline-form">
-            <button type="submit" class="btn-action btn-delete btn-icon" aria-label="Delete activity" title="Delete activity">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"></path>
-                </svg>
-            </button>
-        </form>
+        <button type="button" 
+                data-delete-id="${activityId}" 
+                class="btn-action btn-delete btn-icon" 
+                aria-label="Delete activity" 
+                title="Delete activity">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9z" fill="currentColor"></path>
+            </svg>
+        </button>
     ` : '';
 
     return `
@@ -465,4 +467,33 @@ ensureCreateRows();
         if (e.key === 'Escape' && !modal.hidden) closeModal();
     });
 }());
+
+// Handle delete button clicks with event delegation
+document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('button[data-delete-id]');
+    if (!deleteBtn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const activityId = deleteBtn.dataset.deleteId;
+    if (!confirm('Are you sure you want to delete this activity?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/activity/${activityId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            alert('Failed to delete activity');
+        }
+    } catch (error) {
+        console.error('Error deleting activity:', error);
+        alert('Error deleting activity');
+    }
+});
 

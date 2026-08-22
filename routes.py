@@ -186,13 +186,12 @@ def update_activity_field(id):
     return jsonify({'ok': True, 'activity': serialize_activity(activity)})
 
 
-@app.route('/delete/<int:id>', methods=['POST'])
+@app.route('/activity/<int:id>', methods=['DELETE'])
 def delete(id):
     activity = Activity.query.get_or_404(id)
     db.session.delete(activity)
     db.session.commit()
-
-    return redirect(request.referrer or url_for('dashboard'))
+    return jsonify({'ok': True}), 200
 
 
 @app.route('/start/<int:id>')
