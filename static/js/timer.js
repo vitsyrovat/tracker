@@ -152,18 +152,22 @@ function getActionButtonsMarkup(activityId, isRunning, options = {}) {
 
     const timerButton = isRunning
         ? `
-            <a href="/stop/${activityId}" class="btn-action btn-stop btn-icon" aria-label="Stop timer" title="Stop timer">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
-                </svg>
-            </a>
+            <form method="post" action="/activity/${activityId}/stop" class="inline-form">
+                <button type="submit" class="btn-action btn-stop btn-icon" aria-label="Stop activity" title="Stop activity">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
+                    </svg>
+                </button>
+            </form>
         `
         : allowStart ? `
-            <a href="/start/${activityId}" class="btn-action btn-run btn-icon" aria-label="Start timer" title="Start timer">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
-                </svg>
-            </a>
+            <form method="post" action="/activity/${activityId}/start" class="inline-form">
+                <button type="submit" class="btn-action btn-run btn-icon" aria-label="Start activity" title="Start activity">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
+                    </svg>
+                </button>
+            </form>
         ` : '';
 
     const deleteButton = showDelete ? `

@@ -14,17 +14,31 @@
         </span>
         <div class="activity-buttons">
             {% if activity.is_running %}
-                <a href="{{ url_for('stop_timer', id=activity.id) }}" class="btn-action btn-stop btn-icon" aria-label="Stop timer" title="Stop timer">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
-                    </svg>
-                </a>
+                <form method="post"
+                      action="{{ url_for('stop_activity', id=activity.id) }}"
+                      class="inline-form">
+                    <button type="submit"
+                            class="btn-action btn-stop btn-icon"
+                            aria-label="Stop timer"
+                            title="Stop timer">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
+                        </svg>
+                    </button>
+                </form>
             {% elif allow_start|default(true) %}
-                <a href="{{ url_for('start_timer', id=activity.id) }}" class="btn-action btn-run btn-icon" aria-label="Start timer" title="Start timer">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
-                    </svg>
-                </a>
+                <form method="post"
+                      action="{{ url_for('start_activity', id=activity.id) }}"
+                      class="inline-form">
+                    <button type="submit"
+                            class="btn-action btn-run btn-icon"
+                            aria-label="Start timer"
+                            title="Start timer">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
+                        </svg>
+                    </button>
+                </form>
             {% endif %}
 
             {% if show_delete|default(true) %}

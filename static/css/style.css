@@ -289,8 +289,8 @@ form input {
     display: block;
 }
 
-.btn-run { background: #dcfce7; color: var(--success); }
-.btn-stop { background: #fee2e2; color: var(--danger); }
+.btn-run { background: #dcfce7; color: var(--success); border: none; }
+.btn-stop { background: #fee2e2; color: var(--danger); border: none; }
 .btn-delete {
     background: #f1f5f9;
     color: var(--danger);

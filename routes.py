@@ -151,8 +151,9 @@ def create_activity():
     return jsonify({'ok': True, 'activity': serialize_activity(activity)}), 201
 
 
-@app.route('/activity/<int:id>', methods=['PATCH'])
-def update_activity_field(id):
+@app.route('/activity/<int:id>'
+           '', methods=['PATCH'])
+def update_activity(id):
     activity = Activity.query.get_or_404(id)
     payload = request.get_json(silent=True) or {}
     field = payload.get('field')
@@ -186,16 +187,8 @@ def update_activity_field(id):
     return jsonify({'ok': True, 'activity': serialize_activity(activity)})
 
 
-@app.route('/activity/<int:id>', methods=['DELETE'])
-def delete(id):
-    activity = Activity.query.get_or_404(id)
-    db.session.delete(activity)
-    db.session.commit()
-    return jsonify({'ok': True}), 200
-
-
-@app.route('/start/<int:id>')
-def start_timer(id):
+@app.route('/activity/<int:id>/start', methods=['POST'])
+def start_activity(id):
     activity = Activity.query.get_or_404(id)
     if not activity.is_running:
         activity.is_running = True
@@ -205,8 +198,8 @@ def start_timer(id):
     return redirect(request.referrer or url_for('dashboard'))
 
 
-@app.route('/stop/<int:id>')
-def stop_timer(id):
+@app.route('/activity/<int:id>/stop', methods=['POST'])
+def stop_activity(id):
     activity = Activity.query.get_or_404(id)
     if activity.is_running and activity.last_start_time:
         # Calculate difference between NOW and the saved START time
@@ -222,5 +215,13 @@ def stop_timer(id):
         db.session.commit()
 
     return redirect(request.referrer or url_for('dashboard'))
+
+
+@app.route('/activity/<int:id>', methods=['DELETE'])
+def delete_activity(id):
+    activity = Activity.query.get_or_404(id)
+    db.session.delete(activity)
+    db.session.commit()
+    return jsonify({'ok': True}), 200
 
 
