@@ -50,102 +50,55 @@ def get_date_range(view_type, offset):
 
 
 @app.route('/')
-def track():
-    current_date = date.today()
-
-    # 1. Fetch activities from DB
-    activities = Activity.query.filter(
-        Activity.day == current_date
-    ).all()
-
-    # 2. Calculate total time spent on activities for the day
-    total_seconds = sum(activity.total_duration_seconds for activity in activities)
-
-    return render_template('track.html',
-                           activities=activities,
-                           current_date=current_date,
-                           total_seconds=total_seconds)
-
-
-@app.route('/add_and_run', methods=['POST'])
-def add_and_run():
-    name = request.form.get('name')
-    day_str = request.form.get('day')
-    day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
-    time = request.form.get('time')
-    duration_seconds = int(time) if time else 0
-
-    # Create the activity already in 'running' state
-    new_activity = Activity(
-        name=name,
-        day=day_obj,
-        duration_seconds=duration_seconds,
-        is_running=True,
-        last_start_time=datetime.now()
+def dashboard():
+    view = request.args.get('view', 'week')
+    offset = int(request.args.get('offset', 0))
+    start_date, end_date = get_date_range(view, offset)
+    heading_label = (
+        start_date.strftime('%B %Y')
+        if view == 'month'
+        else format_date_span(start_date, end_date)
     )
 
-    db.session.add(new_activity)
-    db.session.commit()
-    return redirect(url_for('track'))
+    # 1. Fetch activities from DB
+    activities_db = Activity.query.filter(
+        Activity.day >= start_date,
+        Activity.day <= end_date
+    ).all()
+
+    # 2. Organize activities by date
+    # Result structure: { date(2023,10,27): [Activity1, Activity2], ... }
+    activities_by_day = {}
+    total_seconds_by_day = {}
+    for act in activities_db:
+        if act.day not in activities_by_day:
+            activities_by_day[act.day] = []
+            total_seconds_by_day[act.day] = 0
+        activities_by_day[act.day].append(act)
+        total_seconds_by_day[act.day] += act.total_duration_seconds
+
+    # 3. Create a sorted list of all dates in the range
+    all_days = []
+    curr = start_date
+    while curr <= end_date:
+        all_days.append(curr)
+        # Initialize zero total for days with no activities
+        if curr not in total_seconds_by_day:
+            total_seconds_by_day[curr] = 0
+        curr += timedelta(days=1)
 
 
-@app.route('/delete/<int:id>', methods=['POST'])
-def delete(id):
-    activity = Activity.query.get_or_404(id)
-    db.session.delete(activity)
-    db.session.commit()
+    return render_template('dashboard.html',
+                           all_days=all_days,
+                           activities_by_day=activities_by_day,
+                           total_seconds_by_day=total_seconds_by_day,
+                           view=view,
+                           offset=offset,
+                           start_date=start_date,
+                           end_date=end_date,
+                           heading_label=heading_label,
+                           date=date)  # Pass the date class for comparisons
 
-    # db.session.commit()
-    return redirect(url_for('track'))
-
-@app.route('/update/<int:id>', methods=['POST'])
-def update(id):
-    print(id)
-    name = request.form.get('name')
-    day_str = request.form.get('day')
-    day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
-    time = request.form.get('time')
-    duration_seconds = int(time) if time else 0
-
-    activity = Activity.query.get_or_404(id)
-    activity.update(name, day_obj, duration_seconds)
-
-    return redirect(url_for('track'))
-
-
-@app.route('/activity/<int:id>', methods=['PATCH'])
-def update_activity_field(id):
-    activity = Activity.query.get_or_404(id)
-    payload = request.get_json(silent=True) or {}
-    field = payload.get('field')
-    value = payload.get('value')
-
-    if field == 'name':
-        cleaned_name = (value or '').strip()
-        if not cleaned_name:
-            return jsonify({'ok': False, 'error': 'Name cannot be empty.'}), 400
-        if len(cleaned_name) > 100:
-            return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
-        activity.name = cleaned_name
-    elif field == 'duration_seconds':
-        try:
-            duration_seconds = int(value)
-        except (TypeError, ValueError):
-            return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
-
-        if duration_seconds < 0:
-            return jsonify({'ok': False, 'error': 'Duration must be zero or positive.'}), 400
-        activity.duration_seconds = duration_seconds
-    else:
-        return jsonify({'ok': False, 'error': 'Unsupported field.'}), 400
-
-    try:
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'ok': False, 'error': 'Could not save activity.'}), 500
-
-    return jsonify({'ok': True, 'activity': serialize_activity(activity)})
 
 
 @app.route('/activity', methods=['POST'])
@@ -198,23 +151,63 @@ def create_activity():
     return jsonify({'ok': True, 'activity': serialize_activity(activity)}), 201
 
 
+@app.route('/activity/<int:id>', methods=['PATCH'])
+def update_activity_field(id):
+    activity = Activity.query.get_or_404(id)
+    payload = request.get_json(silent=True) or {}
+    field = payload.get('field')
+    value = payload.get('value')
+
+    if field == 'name':
+        cleaned_name = (value or '').strip()
+        if not cleaned_name:
+            return jsonify({'ok': False, 'error': 'Name cannot be empty.'}), 400
+        if len(cleaned_name) > 100:
+            return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
+        activity.name = cleaned_name
+    elif field == 'duration_seconds':
+        try:
+            duration_seconds = int(value)
+        except (TypeError, ValueError):
+            return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
+
+        if duration_seconds < 0:
+            return jsonify({'ok': False, 'error': 'Duration must be zero or positive.'}), 400
+        activity.duration_seconds = duration_seconds
+    else:
+        return jsonify({'ok': False, 'error': 'Unsupported field.'}), 400
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': 'Could not save activity.'}), 500
+
+    return jsonify({'ok': True, 'activity': serialize_activity(activity)})
+
+
+@app.route('/delete/<int:id>', methods=['POST'])
+def delete(id):
+    activity = Activity.query.get_or_404(id)
+    db.session.delete(activity)
+    db.session.commit()
+
+    return redirect(request.referrer or url_for('dashboard'))
+
+
 @app.route('/start/<int:id>')
 def start_timer(id):
-    print(id)
     activity = Activity.query.get_or_404(id)
     if not activity.is_running:
         activity.is_running = True
         activity.last_start_time = datetime.now()
         db.session.commit()
-    else:
-        print('Activity is running')
 
-    return redirect(request.referrer or url_for('track'))
+    return redirect(request.referrer or url_for('dashboard'))
 
 
 @app.route('/stop/<int:id>')
 def stop_timer(id):
-    print(id)
     activity = Activity.query.get_or_404(id)
     if activity.is_running and activity.last_start_time:
         # Calculate difference between NOW and the saved START time
@@ -228,77 +221,6 @@ def stop_timer(id):
         activity.is_running = False
         activity.last_start_time = None
         db.session.commit()
-    else:
-        print('Activity not running')
-    return redirect(request.referrer or url_for('track'))
-
-
-
-
-@app.route('/manage')
-def dashboard():
-    view = request.args.get('view', 'week')
-    offset = int(request.args.get('offset', 0))
-    start_date, end_date = get_date_range(view, offset)
-    heading_label = (
-        start_date.strftime('%B %Y')
-        if view == 'month'
-        else format_date_span(start_date, end_date)
-    )
-
-    # 1. Fetch activities from DB
-    activities_db = Activity.query.filter(
-        Activity.day >= start_date,
-        Activity.day <= end_date
-    ).all()
-
-    # 2. Organize activities by date
-    # Result structure: { date(2023,10,27): [Activity1, Activity2], ... }
-    activities_by_day = {}
-    total_seconds_by_day = {}
-    for act in activities_db:
-        if act.day not in activities_by_day:
-            activities_by_day[act.day] = []
-            total_seconds_by_day[act.day] = 0
-        activities_by_day[act.day].append(act)
-        total_seconds_by_day[act.day] += act.total_duration_seconds
-
-    # 3. Create a sorted list of all dates in the range
-    all_days = []
-    curr = start_date
-    while curr <= end_date:
-        all_days.append(curr)
-        # Initialize zero total for days with no activities
-        if curr not in total_seconds_by_day:
-            total_seconds_by_day[curr] = 0
-        curr += timedelta(days=1)
-
-
-    return render_template('dashboard.html',
-                           all_days=all_days,
-                           activities_by_day=activities_by_day,
-                           total_seconds_by_day=total_seconds_by_day,
-                           view=view,
-                           offset=offset,
-                           start_date=start_date,
-                           end_date=end_date,
-                           heading_label=heading_label,
-                           date=date)  # Pass the date class for comparisons
-
-
-
-@app.route('/add_activity', methods=['POST'])
-def add_activity():
-    name = request.form.get('name')
-    activity_day = request.form.get('day')  # String 'YYYY-MM-DD'
-    note = request.form.get('note')
-
-    # Convert string to date object
-    day_obj = datetime.strptime(activity_day, '%Y-%m-%d').date()
-
-    new_activity = Activity(name=name, day=day_obj, note=note)
-    db.session.add(new_activity)
-    db.session.commit()
 
     return redirect(request.referrer or url_for('dashboard'))
 

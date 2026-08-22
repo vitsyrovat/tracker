@@ -7,10 +7,6 @@
 </head>
 <body>
     <div class="container">
-        <nav class="top-menu">
-            <a href="{{ url_for('track') }}" class="{% if request.endpoint == 'track' %}is-active{% endif %}">Track</a>
-            <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}is-active{% endif %}">Manage</a>
-        </nav>
         {% block content %}{% endblock %}
     </div>
 
