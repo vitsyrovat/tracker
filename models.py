@@ -9,7 +9,7 @@ class Activity(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    name = db.Column(db.String(100), nullable=False, default='')
+    name = db.Column(db.String(128), nullable=False, default='')
     day = db.Column(db.Date, nullable=False, default=date.today)
 
     duration_seconds = db.Column(db.Integer, default=0)

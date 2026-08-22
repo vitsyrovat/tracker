@@ -30,7 +30,7 @@
             {% if activities_by_day[day] %}
                 {% for activity in activities_by_day[day] %}
                     {% set allow_start = day_allow_start %}
-                    {% set show_delete = false %}
+                    {% set show_delete = true %}
                     {% include 'includes/_activity_row.html' %}
                 {% endfor %}
             {% endif %}
