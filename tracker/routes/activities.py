@@ -3,8 +3,7 @@ from flask import Blueprint, request, redirect, url_for, jsonify
 from sqlalchemy.exc import IntegrityError
 
 from tracker.models import db, Activity
-from tracker.serialization import serialize_activity
-
+from tracker.serialization import serialize_activity, parse_activity_label
 
 bp = Blueprint('activities', __name__, url_prefix='/activities')
 
@@ -22,8 +21,7 @@ def create_activity():
         return jsonify({'ok': False, 'error': 'Invalid day value.'}), 400
 
     cleaned_name = (payload.get('name') or '').strip()
-    if len(cleaned_name) > 100:
-        return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
+    issue_number, name, comment = parse_activity_label(cleaned_name)
 
     duration_value = payload.get('duration_seconds')
     if duration_value in (None, ''):
@@ -41,7 +39,9 @@ def create_activity():
         return jsonify({'ok': False, 'error': 'Enter a name or a duration.'}), 400
 
     activity = Activity(
-        name=cleaned_name or '',
+        issue_number=issue_number,
+        name=name or '',
+        note=comment or '',
         day=day_obj,
         duration_seconds=duration_seconds,
         is_running=False,
@@ -65,13 +65,17 @@ def update_activity(id):
     field = payload.get('field')
     value = payload.get('value')
 
-    if field == 'name':
+    if field == 'label':
         cleaned_name = (value or '').strip()
         if not cleaned_name:
             return jsonify({'ok': False, 'error': 'Name cannot be empty.'}), 400
-        if len(cleaned_name) > 100:
-            return jsonify({'ok': False, 'error': 'Name is too long.'}), 400
-        activity.name = cleaned_name
+
+        issue_number, name, note = parse_activity_label(cleaned_name)
+
+        activity.name = name
+        activity.note = note
+        activity.issue_number = issue_number
+
     elif field == 'duration_seconds':
         try:
             duration_seconds = int(value)

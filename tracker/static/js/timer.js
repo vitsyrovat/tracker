@@ -191,7 +191,7 @@ function promoteCreateRow(row, activity) {
     row.removeAttribute('data-create-row');
     row.classList.remove('activity-row-create');
 
-    const nameElement = row.querySelector('.inline-edit[data-field="name"]');
+    const nameElement = row.querySelector('.inline-edit[data-field="label"]');
     const durationElement = row.querySelector('.inline-edit[data-field="duration_seconds"]');
     const buttonsContainer = row.querySelector('.activity-buttons');
     const totalDurationSeconds = activity.total_duration_seconds ?? activity.duration_seconds ?? 0;
@@ -199,9 +199,9 @@ function promoteCreateRow(row, activity) {
     const showDelete = row.dataset.showDelete !== 'true';
 
     nameElement.dataset.activityId = String(activity.id);
-    nameElement.dataset.value = activity.name || '';
+    nameElement.dataset.value = activity.label || '';
     delete nameElement.dataset.placeholder;
-    setNameDisplay(nameElement, activity.name || '');
+    setNameDisplay(nameElement, activity.label || '');
 
     durationElement.classList.add('live-timer');
     durationElement.dataset.activityId = String(activity.id);
@@ -285,7 +285,7 @@ function applyInlineEdit(element) {
         element.classList.remove('is-editing');
 
         if (!shouldSave) {
-            if (field === 'name') {
+            if (field === 'label') {
                 setNameDisplay(element, originalRawValue);
             } else {
                 setDurationDisplay(element, originalRawValue, element.dataset.running === 'true');
@@ -296,7 +296,7 @@ function applyInlineEdit(element) {
         let nextRawValue = input.value.trim();
 
         if (isCreateRow) {
-            if (field === 'name') {
+            if (field === 'label') {
                 if (!nextRawValue) {
                     setNameDisplay(element, '');
                     return;
@@ -321,15 +321,15 @@ function applyInlineEdit(element) {
             element.classList.add('is-saving');
 
             try {
-                const created = await createActivity(createRow.dataset.day, field === 'name'
-                    ? { name: nextRawValue }
+                const created = await createActivity(createRow.dataset.day, field === 'label'
+                    ? { label: nextRawValue }
                     : { duration_seconds: nextRawValue });
                 const column = createRow.closest('.activities-column');
                 promoteCreateRow(createRow, created);
                 updateDayTotal(column);
                 ensureCreateRow(column);
             } catch (error) {
-                if (field === 'name') {
+                if (field === 'label') {
                     setNameDisplay(element, '');
                 } else {
                     setDurationDisplay(element, '');
@@ -341,7 +341,7 @@ function applyInlineEdit(element) {
             return;
         }
 
-        if (field === 'name') {
+        if (field === 'label') {
             if (!nextRawValue) {
                 setNameDisplay(element, originalRawValue);
                 showInlineEditError(element, 'Name cannot be empty.');
@@ -364,9 +364,9 @@ function applyInlineEdit(element) {
 
         try {
             const updated = await persistFieldValue(activityId, field, nextRawValue);
-            if (field === 'name') {
-                element.dataset.value = updated.name || '';
-                setNameDisplay(element, updated.name || '');
+            if (field === 'label') {
+                element.dataset.value = updated.label || '';
+                setNameDisplay(element, updated.label || '');
             } else {
                 const totalDurationSeconds = updated.total_duration_seconds ?? updated.duration_seconds;
                 element.dataset.value = String(totalDurationSeconds);
@@ -380,7 +380,7 @@ function applyInlineEdit(element) {
             if (field === 'duration_seconds') {
                 element.setAttribute('data-seconds', originalRawValue);
             }
-            if (field === 'name') {
+            if (field === 'label') {
                 setNameDisplay(element, originalRawValue);
             } else {
                 setDurationDisplay(element, originalRawValue, element.dataset.running === 'true');

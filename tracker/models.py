@@ -14,6 +14,7 @@ class Activity(db.Model):
 
     duration_seconds = db.Column(db.Integer, default=0)
     note = db.Column(db.Text)
+    issue_number = db.Column(db.Integer, nullable=True, default=None)
 
     # Timer state (used to calculate elapsed time when 'stop' is pressed)
     last_start_time = db.Column(db.DateTime, nullable=True)
@@ -29,9 +30,15 @@ class Activity(db.Model):
         else:
             return self.duration_seconds
 
-    # @property
-    # def display(self) -> str:
-    #     return f'{self.id}: {self.name} on {self.day}'
+    @property
+    def label(self) -> str:
+        label = f'#{self.issue_number} - ' if self.issue_number else ''
+        if self.name:
+            label += self.name
+        if self.note:
+            label += f' ({self.note})'
+        return label.strip()
+        # return f'#{self.issue_number} - {self.name} ({self.note})'
     #
     # def get_redmine_payload(self):
     #     # Convert duration_seconds to hours and minutes
