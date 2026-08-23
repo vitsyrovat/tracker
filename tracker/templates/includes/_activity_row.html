@@ -1,8 +1,6 @@
 <div class="activity-row">
     <span class="inline-edit {% if not activity.name %}is-empty{% endif %}"
           data-activity-id="{{ activity.id }}"
-<!--          data-field="display"-->
-<!--          data-value="{{ activity.display or '' }}">{{ activity.display or 'Click to add name' }}</span>-->
           data-field="name"
           data-value="{{ activity.name or '' }}">{{ activity.name or 'Click to add name' }}</span>
     <div class="activity-actions">
