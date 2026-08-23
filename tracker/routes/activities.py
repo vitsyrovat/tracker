@@ -1,77 +1,14 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from datetime import datetime
+from flask import Blueprint, request, redirect, url_for, jsonify
 from sqlalchemy.exc import IntegrityError
 
-from tracker.app import app
 from tracker.models import db, Activity
-from datetime import date, datetime, timedelta
-
-from tracker.utils import format_date_span, get_date_range
+from tracker.serialization import serialize_activity
 
 
-def serialize_activity(activity):
-    return {
-        'id': activity.id,
-        'name': activity.name,
-        'duration_seconds': activity.duration_seconds,
-        'total_duration_seconds': activity.total_duration_seconds,
-        'is_running': activity.is_running,
-        'day': activity.day.isoformat(),
-    }
+bp = Blueprint('activities', __name__, url_prefix='/activities')
 
-
-@app.route('/')
-def dashboard():
-    view = request.args.get('view', 'week')
-    offset = int(request.args.get('offset', 0))
-    start_date, end_date = get_date_range(view, offset)
-    heading_label = (
-        start_date.strftime('%B %Y')
-        if view == 'month'
-        else format_date_span(start_date, end_date)
-    )
-
-    # 1. Fetch activities from DB
-    activities_db = Activity.query.filter(
-        Activity.day >= start_date,
-        Activity.day <= end_date
-    ).all()
-
-    # 2. Organize activities by date
-    # Result structure: { date(2023,10,27): [Activity1, Activity2], ... }
-    activities_by_day = {}
-    total_seconds_by_day = {}
-    for act in activities_db:
-        if act.day not in activities_by_day:
-            activities_by_day[act.day] = []
-            total_seconds_by_day[act.day] = 0
-        activities_by_day[act.day].append(act)
-        total_seconds_by_day[act.day] += act.total_duration_seconds
-
-    # 3. Create a sorted list of all dates in the range
-    all_days = []
-    curr = start_date
-    while curr <= end_date:
-        all_days.append(curr)
-        # Initialize zero total for days with no activities
-        if curr not in total_seconds_by_day:
-            total_seconds_by_day[curr] = 0
-        curr += timedelta(days=1)
-
-
-    return render_template('dashboard.html',
-                           all_days=all_days,
-                           activities_by_day=activities_by_day,
-                           total_seconds_by_day=total_seconds_by_day,
-                           view=view,
-                           offset=offset,
-                           start_date=start_date,
-                           end_date=end_date,
-                           heading_label=heading_label,
-                           date=date)  # Pass the date class for comparisons
-
-
-
-@app.route('/activity', methods=['POST'])
+@bp.route('/', methods=['POST'])
 def create_activity():
     payload = request.get_json(silent=True) or {}
     day_str = payload.get('day')
@@ -121,8 +58,7 @@ def create_activity():
     return jsonify({'ok': True, 'activity': serialize_activity(activity)}), 201
 
 
-@app.route('/activity/<int:id>'
-           '', methods=['PATCH'])
+@bp.route('/<int:id>', methods=['PATCH'])
 def update_activity(id):
     activity = Activity.query.get_or_404(id)
     payload = request.get_json(silent=True) or {}
@@ -157,7 +93,7 @@ def update_activity(id):
     return jsonify({'ok': True, 'activity': serialize_activity(activity)})
 
 
-@app.route('/activity/<int:id>/start', methods=['POST'])
+@bp.route('/<int:id>/start', methods=['POST'])
 def start_activity(id):
     activity = Activity.query.get_or_404(id)
     if not activity.is_running:
@@ -165,10 +101,10 @@ def start_activity(id):
         activity.last_start_time = datetime.now()
         db.session.commit()
 
-    return redirect(request.referrer or url_for('dashboard'))
+    return redirect(request.referrer or url_for('main.dashboard'))
 
 
-@app.route('/activity/<int:id>/stop', methods=['POST'])
+@bp.route('/<int:id>/stop', methods=['POST'])
 def stop_activity(id):
     activity = Activity.query.get_or_404(id)
     if activity.is_running and activity.last_start_time:
@@ -184,10 +120,10 @@ def stop_activity(id):
         activity.last_start_time = None
         db.session.commit()
 
-    return redirect(request.referrer or url_for('dashboard'))
+    return redirect(request.referrer or url_for('main.ashboard'))
 
 
-@app.route('/activity/<int:id>', methods=['DELETE'])
+@bp.route('/<int:id>', methods=['DELETE'])
 def delete_activity(id):
     activity = Activity.query.get_or_404(id)
     db.session.delete(activity)
@@ -195,7 +131,7 @@ def delete_activity(id):
     return jsonify({'ok': True}), 200
 
 
-@app.route('/activity/<int:id>/push-to-redmine', methods=['POST'])
+@bp.route('/<int:id>/push-to-redmine', methods=['POST'])
 def push_activity(id):
     activity = Activity.query.get_or_404(id)
     # db.session.delete(activity)

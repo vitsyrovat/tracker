@@ -130,7 +130,7 @@ async function persistFieldValue(activityId, field, value) {
 }
 
 async function createActivity(day, payload) {
-    const response = await fetch('/activity', {
+    const response = await fetch('/activities', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -151,7 +151,7 @@ function getActionButtonsMarkup(activityId, isRunning, options = {}) {
 
     const timerButton = isRunning
         ? `
-            <form method="post" action="/activity/${activityId}/stop" class="inline-form">
+            <form method="post" action="/activities/${activityId}/stop" class="inline-form">
                 <button type="submit" class="btn-action btn-stop btn-icon" aria-label="Stop activity" title="Stop activity">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"></rect>
@@ -160,7 +160,7 @@ function getActionButtonsMarkup(activityId, isRunning, options = {}) {
             </form>
         `
         : allowStart ? `
-            <form method="post" action="/activity/${activityId}/start" class="inline-form">
+            <form method="post" action="/activities/${activityId}/start" class="inline-form">
                 <button type="submit" class="btn-action btn-run btn-icon" aria-label="Start activity" title="Start activity">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <polygon points="8,6 18,12 8,18" fill="currentColor"></polygon>
@@ -485,7 +485,7 @@ document.addEventListener('click', async (e) => {
     }
 
     try {
-        const response = await fetch(`/activity/${activityId}`, {
+        const response = await fetch(`/activities/${activityId}`, {
             method: 'DELETE'
         });
 

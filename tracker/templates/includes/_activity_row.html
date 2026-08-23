@@ -17,7 +17,7 @@
         <div class="activity-buttons">
             {% if activity.is_running %}
                 <form method="post"
-                      action="{{ url_for('stop_activity', id=activity.id) }}"
+                      action="{{ url_for('activities.stop_activity', id=activity.id) }}"
                       class="inline-form">
                     <button type="submit"
                             class="btn-action btn-stop btn-icon"
@@ -30,7 +30,7 @@
                 </form>
             {% elif allow_start|default(true) %}
                 <form method="post"
-                      action="{{ url_for('start_activity', id=activity.id) }}"
+                      action="{{ url_for('activities.start_activity', id=activity.id) }}"
                       class="inline-form">
                     <button type="submit"
                             class="btn-action btn-run btn-icon"

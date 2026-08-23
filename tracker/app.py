@@ -1,11 +1,17 @@
 from pathlib import Path
 from flask import Flask
 from tracker.models import db
+from tracker.routes.activities import bp as activities_bp
+from tracker.routes.main import bp as main_bp
 
 
 BASE_DIR = Path(__file__).resolve().parent
 
 app = Flask(__name__)
+
+app.register_blueprint(main_bp)
+app.register_blueprint(activities_bp)
+
 
 # Configure the SQLite database
 # This creates a file named 'tracker.db' in the project folder
@@ -23,4 +29,4 @@ def format_seconds(seconds):
 
 
 # Import routes AFTER app is defined to avoid circular imports
-from tracker import routes  # noqa: E402, F401
+# from tracker import routes  # noqa: E402, F401

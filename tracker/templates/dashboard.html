@@ -5,14 +5,14 @@
 
 <!-- Navigation Controls -->
 <div class="controls">
-    <a href="{{ url_for('dashboard', view=view, offset=offset-1) }}">← Previous</a>
-    <a href="{{ url_for('dashboard', view=view, offset=0) }}">Today</a>
-    <a href="{{ url_for('dashboard', view=view, offset=offset+1) }}">Next →</a>
+    <a href="{{ url_for('main.dashboard', view=view, offset=offset-1) }}">← Previous</a>
+    <a href="{{ url_for('main.dashboard', view=view, offset=0) }}">Today</a>
+    <a href="{{ url_for('main.dashboard', view=view, offset=offset+1) }}">Next →</a>
 </div>
 
 <div class="controls view-switch">
-    <a href="{{ url_for('dashboard', view='week', offset=0) }}" class="{% if view == 'week' %}is-active{% endif %}">Week</a>
-    <a href="{{ url_for('dashboard', view='month', offset=0) }}" class="{% if view == 'month' %}is-active{% endif %}">Month</a>
+    <a href="{{ url_for('main.dashboard', view='week', offset=0) }}" class="{% if view == 'week' %}is-active{% endif %}">Week</a>
+    <a href="{{ url_for('main.dashboard', view='month', offset=0) }}" class="{% if view == 'month' %}is-active{% endif %}">Month</a>
 </div>
 
 {% for day in all_days %}
