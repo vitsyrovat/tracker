@@ -1,11 +1,11 @@
 from flask import render_template, request, redirect, url_for, jsonify
 from sqlalchemy.exc import IntegrityError
 
-from app import app
-from models import db, Activity
+from tracker.app import app
+from tracker.models import db, Activity
 from datetime import date, datetime, timedelta
 
-import calendar
+from tracker.utils import format_date_span, get_date_range
 
 
 def serialize_activity(activity):
@@ -17,36 +17,6 @@ def serialize_activity(activity):
         'is_running': activity.is_running,
         'day': activity.day.isoformat(),
     }
-
-
-def add_months(base_date, months):
-    month_index = (base_date.month - 1) + months
-    year = base_date.year + (month_index // 12)
-    month = (month_index % 12) + 1
-    last_day = calendar.monthrange(year, month)[1]
-    day = min(base_date.day, last_day)
-    return base_date.replace(year=year, month=month, day=day)
-
-
-def format_date_span(start_date, end_date):
-    if start_date.year == end_date.year:
-        if start_date.month == end_date.month:
-            return f'{start_date.strftime("%b")} {start_date.day}–{end_date.day}, {start_date.year}'
-        return f'{start_date.strftime("%b")} {start_date.day} – {end_date.strftime("%b")} {end_date.day}, {start_date.year}'
-    return f'{start_date.strftime("%b")} {start_date.day}, {start_date.year} – {end_date.strftime("%b")} {end_date.day}, {end_date.year}'
-
-
-def get_date_range(view_type, offset):
-    today = date.today()
-    if view_type == 'month':
-        target_date = add_months(today.replace(day=1), offset)
-        start_date = target_date.replace(day=1)
-        last_day = calendar.monthrange(start_date.year, start_date.month)[1]
-        end_date = start_date.replace(day=last_day)
-    else:  # Default to week
-        start_date = today - timedelta(days=today.weekday()) + timedelta(weeks=offset)
-        end_date = start_date + timedelta(days=6)
-    return start_date, end_date
 
 
 @app.route('/')
@@ -224,4 +194,17 @@ def delete_activity(id):
     db.session.commit()
     return jsonify({'ok': True}), 200
 
+
+@app.route('/activity/<int:id>/push-to-redmine', methods=['POST'])
+def push_activity(id):
+    activity = Activity.query.get_or_404(id)
+    # db.session.delete(activity)
+    # db.session.commit()
+
+    # redmine_client.time_entry.create(
+    #     issue_id=task_id,
+    #     spent_on=result_date,
+    #     hours=hours,
+    #     comments=desc_text,
+    return jsonify({'ok': True}), 200
 

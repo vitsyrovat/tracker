@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-track = "tracker_cli:main"
+track = "tracker.cli:main"
 
-[tool.setuptools]
-py-modules = ["app", "routes", "models", "tracker_cli"]
+[tool.setuptools.packages.find]
+include = ["tracker*"]

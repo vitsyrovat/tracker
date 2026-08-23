@@ -28,3 +28,22 @@ class Activity(db.Model):
             return self.duration_seconds + (datetime.now() - self.last_start_time).seconds
         else:
             return self.duration_seconds
+
+    # @property
+    # def display(self) -> str:
+    #     return f'{self.id}: {self.name} on {self.day}'
+    #
+    # def get_redmine_payload(self):
+    #     # Convert duration_seconds to hours and minutes
+    #     total_seconds = self.total_duration_seconds
+    #     hours = total_seconds // 3600
+    #     minutes = (total_seconds % 3600) // 60
+    #
+    #     payload = {
+    #         'issue_id': 123,  # Replace with actual issue ID
+    #         'spent_on': self.day.isoformat(),
+    #         'hours': hours,
+    #         'minutes': minutes,
+    #         'comments': self.note or ''
+    #     }
+    #     return payload

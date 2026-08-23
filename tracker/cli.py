@@ -1,7 +1,7 @@
 import argparse
 
-from app import app
-from models import db
+from tracker.app import app
+from tracker.models import db
 
 
 def build_parser() -> argparse.ArgumentParser:
