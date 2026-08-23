@@ -64,6 +64,13 @@ Commit both `pyproject.toml` and `uv.lock`.
 
 No separate setup step is required. The app creates `tracker.db` automatically if it does not exist.
 
+## Interactive python shell
+
+Open shell with app context:
+```
+uv run flask --app tracker.app shell
+```
+
 ## Notes
 
 - If port `8000` is busy, use another port, for example: `uv run track --port 8001`.

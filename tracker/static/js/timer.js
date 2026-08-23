@@ -114,7 +114,7 @@ function updateTimers() {
 }
 
 async function persistFieldValue(activityId, field, value) {
-    const response = await fetch(`/activity/${activityId}`, {
+    const response = await fetch(`/activities/${activityId}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'

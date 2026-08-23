@@ -26,7 +26,3 @@ def format_seconds(seconds):
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     return f"{hours}h {minutes}m"
-
-
-# Import routes AFTER app is defined to avoid circular imports
-# from tracker import routes  # noqa: E402, F401
