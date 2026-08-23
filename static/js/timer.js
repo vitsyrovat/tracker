@@ -1,4 +1,3 @@
-// static/js/timer.js
 function formatSeconds(totalSeconds) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -197,7 +196,7 @@ function promoteCreateRow(row, activity) {
     const buttonsContainer = row.querySelector('.activity-buttons');
     const totalDurationSeconds = activity.total_duration_seconds ?? activity.duration_seconds ?? 0;
     const allowStart = row.dataset.allowStart !== 'false';
-    const showDelete = row.dataset.showDelete !== 'false';
+    const showDelete = row.dataset.showDelete !== 'true';
 
     nameElement.dataset.activityId = String(activity.id);
     nameElement.dataset.value = activity.name || '';

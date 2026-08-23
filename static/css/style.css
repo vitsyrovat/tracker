@@ -21,7 +21,7 @@ body {
 
 /* Container & Navigation */
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -194,7 +194,7 @@ form input {
 
 .inline-edit[data-field="name"] {
     display: inline-block;
-    min-width: 140px;
+    min-width: 250px;
 }
 
 .inline-edit.is-empty {
