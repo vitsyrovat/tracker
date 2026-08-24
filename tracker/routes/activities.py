@@ -10,40 +10,35 @@ bp = Blueprint('activities', __name__, url_prefix='/activities')
 @bp.route('/', methods=['POST'])
 def create_activity():
     payload = request.get_json(silent=True) or {}
-    day_str = payload.get('day')
+    day_str = payload.get('day', '')
 
     if not day_str:
         return jsonify({'ok': False, 'error': 'Day is required.'}), 400
-
     try:
         day_obj = datetime.strptime(day_str, '%Y-%m-%d').date()
     except (TypeError, ValueError):
         return jsonify({'ok': False, 'error': 'Invalid day value.'}), 400
 
-    cleaned_name = (payload.get('name') or '').strip()
-    issue_number, name, comment = parse_activity_label(cleaned_name)
+    label_stripped = (payload.get('label') or '').strip()
+    if not label_stripped:
+        return jsonify({'ok': False, 'error': 'Enter activity label.'}), 400
 
-    duration_value = payload.get('duration_seconds')
-    if duration_value in (None, ''):
-        duration_seconds = 0
-    else:
-        try:
-            duration_seconds = int(duration_value)
-        except (TypeError, ValueError):
-            return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
-
-    if duration_seconds < 0:
+    duration_str = payload.get('duration_seconds', '0')
+    try:
+        duration_int = int(duration_str)
+    except (TypeError, ValueError):
+        return jsonify({'ok': False, 'error': 'Invalid duration value.'}), 400
+    if duration_int < 0:
         return jsonify({'ok': False, 'error': 'Duration must be zero or positive.'}), 400
 
-    if not cleaned_name and duration_value in (None, ''):
-        return jsonify({'ok': False, 'error': 'Enter a name or a duration.'}), 400
+    issue_number, name, comment = parse_activity_label(label_stripped)
 
     activity = Activity(
         issue_number=issue_number,
         name=name or '',
         note=comment or '',
         day=day_obj,
-        duration_seconds=duration_seconds,
+        duration_seconds=duration_int,
         is_running=False,
         last_start_time=None,
     )
