@@ -11,6 +11,8 @@ requires-python = ">=3.10"
 dependencies = [
     "Flask>=3.1",
     "Flask-SQLAlchemy>=3.1",
+    "python-dotenv>=1.2.3",
+    "python-redmine>=2.5.0",
 ]
 
 [project.scripts]
